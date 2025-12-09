@@ -9,18 +9,18 @@ grid_points = [
     8, 3;   % Bit 3
     8, 4;   % Bit 4
     8, 5;   % Bit 5
-    8, 7;   % Bit 6 (Skips 8, 6)
-    8, 9;   % Bit 7 
+    8, 6;   % Bit 6 (Skips 8, 7)
+    8, 8;   % Bit 7
+    8, 9;   % Bit 8 
     
     % Horizontal Strip (Row 8)
-    1, 8;   % Bit 8
-    2, 8;   % Bit 9
-    3, 8;   % Bit 10
-    4, 8;   % Bit 11
-    5, 8;   % Bit 12
-    7, 8;   % Bit 13 (Skips 6, 8)
-    9, 8;   % Bit 14
-    6, 8    % Bit 15 (The last bit of the sequence)
+    1, 8;   % Bit 9
+    2, 8;   % Bit 10
+    3, 8;   % Bit 11
+    4, 8;   % Bit 12
+    5, 8;   % Bit 13
+    6, 8;   % Bit 14 (Skips 7, 8)
+    8, 8;   % Bit 15
 ];
 
 raw_format_bits = zeros(15, 1);
@@ -29,8 +29,13 @@ for i = 1:15
     R = grid_points(i, 2); % Row (Y)
     
     % Calculate the center pixel coordinates
-    center_x = round(TL_x + (C - 3.5) * M);
-    center_y = round(TL_y + (R - 3.5) * M);
+    if i <= 8
+        center_x = round(TL_x + (C - 3) * M);
+        center_y = round(TL_y + (R - 2.5) * M);
+    else
+        center_x = round(TL_x + (C - 4) * M);
+        center_y = round(TL_y + (R - 1.5) * M);
+    end
     
     % Sample the binarized image (bw). 
     % We assume 0=White, 1=Black (dark module = 1)
@@ -40,15 +45,12 @@ for i = 1:15
     if center_y > 0 && center_y <= rows && center_x > 0 && center_x <= cols
         % 1 - bw(y, x) flips the value if bw is 0=Black, 1=White (common)
         raw_value = ~bw(center_y, center_x); 
+        disp([center_x, center_y, raw_value]);
         raw_format_bits(i) = raw_value;
     else
         warning(['Format Information sample point is out of bounds at: (', num2str(center_x), ',', num2str(center_y), ')']);
         raw_format_bits(i) = 0; % Default to 0 if out of bounds
     end
 end
-
-% The fixed Dark Module (always Black/1) at (8, 8) is at bit index 6
-% The 7th element in the raw_format_bits array is the actual 7th bit.
-raw_format_bits = [raw_format_bits(1:6); 1; raw_format_bits(7:14)];
 
 end
